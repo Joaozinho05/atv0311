@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: crud-db
+    environment:
+      POSTGRES_USER: aluno
+      POSTGRES_PASSWORD: senha123
+      POSTGRES_DB: escola
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aluno -d escola"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: ./api
+    container_name: crud-api
+    environment:
+      DB_HOST: db            # nome do serviço acima = endereço do banco na rede
+      DB_PORT: "5432"
+      POSTGRES_USER: aluno
+      POSTGRES_PASSWORD: senha123
+      POSTGRES_DB: escola
+    ports:
+      - "5000:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - backend
+
+networks:
+  backend:
+
+volumes:
+  db_data:
